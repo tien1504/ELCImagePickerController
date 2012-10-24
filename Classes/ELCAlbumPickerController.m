@@ -11,7 +11,7 @@
 
 @implementation ELCAlbumPickerController
 
-@synthesize parent, assetGroups;
+@synthesize parent, assetGroups, assetsFilter;
 
 #pragma mark -
 #pragma mark View lifecycle
@@ -107,7 +107,7 @@
     
     // Get count
     ALAssetsGroup *g = (ALAssetsGroup*)[assetGroups objectAtIndex:indexPath.row];
-    [g setAssetsFilter:[ALAssetsFilter allPhotos]];
+    [g setAssetsFilter:[self assetsFilter]];
     NSInteger gCount = [g numberOfAssets];
     
     cell.textLabel.text = [NSString stringWithFormat:@"%@ (%d)",[g valueForProperty:ALAssetsGroupPropertyName], gCount];
@@ -127,7 +127,7 @@
 
     // Move me    
     picker.assetGroup = [assetGroups objectAtIndex:indexPath.row];
-    [picker.assetGroup setAssetsFilter:[ALAssetsFilter allPhotos]];
+    [picker.assetGroup setAssetsFilter:[self assetsFilter]];
     
 	[self.navigationController pushViewController:picker animated:YES];
 	[picker release];

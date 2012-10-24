@@ -15,8 +15,10 @@
 	id parent;
     
     ALAssetsLibrary *library;
+    ALAssetsFilter *assetsFilter;
 }
 
+@property (nonatomic, retain) ALAssetsFilter *assetsFilter;
 @property (nonatomic, assign) id parent;
 @property (nonatomic, retain) NSMutableArray *assetGroups;
 
