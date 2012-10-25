@@ -7,20 +7,24 @@
 
 #import <UIKit/UIKit.h>
 #import <AssetsLibrary/AssetsLibrary.h>
+#import "ELCAsset.h"
 
-@interface ELCAssetTablePicker : UITableViewController
+
+@class ELCAlbumPickerController;
+
+@interface ELCAssetTablePicker : UITableViewController <ELCAssetDelegate>
 {
 	ALAssetsGroup *assetGroup;
 	
 	NSMutableArray *elcAssets;
 	int selectedAssets;
 	
-	id parent;
+	ELCAlbumPickerController *parent;
 	
 	NSOperationQueue *queue;
 }
 
-@property (nonatomic, assign) id parent;
+@property (nonatomic, assign) ELCAlbumPickerController *parent;
 @property (nonatomic, assign) ALAssetsGroup *assetGroup;
 @property (nonatomic, retain) NSMutableArray *elcAssets;
 @property (nonatomic, retain) IBOutlet UILabel *selectedAssetsLabel;

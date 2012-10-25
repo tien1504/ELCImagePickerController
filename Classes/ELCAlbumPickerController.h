@@ -8,20 +8,25 @@
 #import <UIKit/UIKit.h>
 #import <AssetsLibrary/AssetsLibrary.h>
 
+@class ELCImagePickerController;
+@class ELCAsset;
+
 @interface ELCAlbumPickerController : UITableViewController {
 	
 	NSMutableArray *assetGroups;
 	NSOperationQueue *queue;
-	id parent;
+	ELCImagePickerController *parent;
     
     ALAssetsLibrary *library;
     ALAssetsFilter *assetsFilter;
 }
 
 @property (nonatomic, retain) ALAssetsFilter *assetsFilter;
-@property (nonatomic, assign) id parent;
+@property (nonatomic, assign) ELCImagePickerController *parent;
 @property (nonatomic, retain) NSMutableArray *assetGroups;
 
+-(BOOL)canSelectAsset:(ELCAsset *)asset;
+-(BOOL)canDeselectAsset:(ELCAsset *)asset;
 -(void)selectedAssets:(NSArray*)_assets;
 
 @end

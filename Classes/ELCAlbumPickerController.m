@@ -77,7 +77,20 @@
 
 -(void)selectedAssets:(NSArray*)_assets {
 	
-	[(ELCImagePickerController*)parent selectedAssets:_assets];
+	[parent selectedAssets:_assets];
+
+}
+
+-(BOOL)canSelectAsset:(ELCAsset *)asset {
+
+    return [parent canSelectAsset:asset];
+
+}
+
+-(BOOL)canDeselectAsset:(ELCAsset *)asset {
+
+    return [parent canDeselectAsset:asset];
+
 }
 
 #pragma mark -

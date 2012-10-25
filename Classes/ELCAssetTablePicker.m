@@ -74,7 +74,7 @@
 		}
 	}
         
-    [(ELCAlbumPickerController*)self.parent selectedAssets:selectedAssetsImages];
+    [self.parent selectedAssets:selectedAssetsImages];
 }
 
 #pragma mark UITableViewDataSource Delegate Methods
@@ -95,37 +95,41 @@
 	int maxIndex = (_indexPath.row*4+3);
     
 	// NSLog(@"Getting assets for %d to %d with array count %d", index, maxIndex, [assets count]);
+
+    NSArray *assets = nil;
     
 	if(maxIndex < [self.elcAssets count]) {
         
-		return [NSArray arrayWithObjects:[self.elcAssets objectAtIndex:index],
-				[self.elcAssets objectAtIndex:index+1],
-				[self.elcAssets objectAtIndex:index+2],
-				[self.elcAssets objectAtIndex:index+3],
-				nil];
+		assets = [NSArray arrayWithObjects:[self.elcAssets objectAtIndex:index],
+                  [self.elcAssets objectAtIndex:index+1],
+                  [self.elcAssets objectAtIndex:index+2],
+                  [self.elcAssets objectAtIndex:index+3],
+                  nil];
 	}
     
 	else if(maxIndex-1 < [self.elcAssets count]) {
         
-		return [NSArray arrayWithObjects:[self.elcAssets objectAtIndex:index],
-				[self.elcAssets objectAtIndex:index+1],
-				[self.elcAssets objectAtIndex:index+2],
-				nil];
+		assets = [NSArray arrayWithObjects:[self.elcAssets objectAtIndex:index],
+                  [self.elcAssets objectAtIndex:index+1],
+                  [self.elcAssets objectAtIndex:index+2],
+                  nil];
 	}
     
 	else if(maxIndex-2 < [self.elcAssets count]) {
         
-		return [NSArray arrayWithObjects:[self.elcAssets objectAtIndex:index],
-				[self.elcAssets objectAtIndex:index+1],
-				nil];
+		assets = [NSArray arrayWithObjects:[self.elcAssets objectAtIndex:index],
+                  [self.elcAssets objectAtIndex:index+1],
+                  nil];
 	}
     
 	else if(maxIndex-3 < [self.elcAssets count]) {
         
-		return [NSArray arrayWithObject:[self.elcAssets objectAtIndex:index]];
+		assets = [NSArray arrayWithObject:[self.elcAssets objectAtIndex:index]];
 	}
+
+    [assets makeObjectsPerformSelector:@selector(setDelegate:) withObject:self];
     
-	return nil;
+	return assets;
 }
 
 // Customize the appearance of table view cells.
@@ -172,6 +176,18 @@
     [elcAssets release];
     [selectedAssetsLabel release];
     [super dealloc];    
+}
+
+#pragma mark - ELCAssetDelegate implementation
+
+- (BOOL)assetCanBeSelected:(ELCAsset *)asset
+{
+    return [[self parent] canSelectAsset:asset];
+}
+
+- (BOOL)assetCanBeDeselected:(ELCAsset *)asset
+{
+    return [[self parent] canDeselectAsset:asset];
 }
 
 @end

@@ -12,6 +12,7 @@
 
 @synthesize asset;
 @synthesize parent;
+@synthesize delegate;
 
 - (id)initWithFrame:(CGRect)frame {
     if ((self = [super initWithFrame:frame])) {
@@ -29,7 +30,8 @@
 		CGRect viewFrames = CGRectMake(0, 0, 75, 75);
 		
 		UIImageView *assetImageView = [[UIImageView alloc] initWithFrame:viewFrames];
-		[assetImageView setContentMode:UIViewContentModeScaleToFill];
+		[assetImageView setContentMode:UIViewContentModeScaleAspectFill];
+        [assetImageView setClipsToBounds:YES];
 		[assetImageView setImage:[UIImage imageWithCGImage:[self.asset thumbnail]]];
 		[self addSubview:assetImageView];
 		[assetImageView release];
@@ -44,9 +46,14 @@
 }
 
 -(void)toggleSelection {
-    
-	overlayView.hidden = !overlayView.hidden;
-    
+
+    id<ELCAssetDelegate> del = [self delegate];
+    SEL selector = overlayView.hidden ? @selector(assetCanBeSelected:) : @selector(assetCanBeDeselected:);
+    BOOL shouldToggle = [del respondsToSelector:selector] ? (BOOL) [del performSelector:selector withObject:self] : YES;
+
+    if (shouldToggle)
+        overlayView.hidden = !overlayView.hidden;
+
 //    if([(ELCAssetTablePicker*)self.parent totalSelectedAssets] >= 10) {
 //        
 //        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Maximum Reached" message:@"" delegate:self cancelButtonTitle:nil otherButtonTitles:@"Ok", nil];
@@ -76,3 +83,17 @@
 
 @end
 
+
+@implementation ALAsset (ELCHelpers)
+
+-(NSDictionary *)mediaInfo
+{
+    NSMutableDictionary *workingDictionary = [NSMutableDictionary dictionary];
+    [workingDictionary setObject:[self valueForProperty:ALAssetPropertyType] forKey:UIImagePickerControllerMediaType];
+    [workingDictionary setObject:[UIImage imageWithCGImage:[[self defaultRepresentation] fullScreenImage]] forKey:UIImagePickerControllerOriginalImage];
+    [workingDictionary setObject:[[self valueForProperty:ALAssetPropertyURLs] valueForKey:[[[self valueForProperty:ALAssetPropertyURLs] allKeys] objectAtIndex:0]] forKey:UIImagePickerControllerReferenceURL];
+
+    return [NSDictionary dictionaryWithDictionary:workingDictionary];
+}
+
+@end
