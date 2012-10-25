@@ -37,7 +37,8 @@
 		[assetImageView release];
 		
 		overlayView = [[UIImageView alloc] initWithFrame:viewFrames];
-		[overlayView setImage:[UIImage imageNamed:@"Overlay.png"]];
+		[overlayView setImage:[self overlayImage]];
+        [self configureOverlayImage];
 		[overlayView setHidden:YES];
 		[self addSubview:overlayView];
     }
@@ -51,8 +52,11 @@
     SEL selector = overlayView.hidden ? @selector(assetCanBeSelected:) : @selector(assetCanBeDeselected:);
     BOOL shouldToggle = [del respondsToSelector:selector] ? (BOOL) [del performSelector:selector withObject:self] : YES;
 
-    if (shouldToggle)
+    if (shouldToggle) {
         overlayView.hidden = !overlayView.hidden;
+        [overlayView setImage:[self overlayImage]];
+        [self configureOverlayImage];
+    }
 
 //    if([(ELCAssetTablePicker*)self.parent totalSelectedAssets] >= 10) {
 //        
@@ -79,6 +83,26 @@
     self.asset = nil;
 	[overlayView release];
     [super dealloc];
+}
+
+- (UIImage *)overlayImage
+{
+    id<ELCAssetDelegate> del = [self delegate];
+    return [del respondsToSelector:@selector(overlayImageForAsset:)] ? [del overlayImageForAsset:self] : [UIImage imageNamed:@"Overlay.png"];
+}
+
+- (void)configureOverlayImage
+{
+    [overlayView sizeToFit];
+    CGRect overlayFrame = [overlayView frame];
+    CGRect bounds = [[overlayView superview] bounds];
+    if (overlayFrame.size.width < bounds.size.width && overlayFrame.size.height < bounds.size.height) {
+        CGFloat padding = 3;
+        overlayFrame.origin = CGPointMake(bounds.size.width - overlayFrame.size.width - padding,
+                                          bounds.size.height - overlayFrame.size.height - padding);
+    } else
+        overlayFrame = bounds;
+    [overlayView setFrame:overlayFrame];
 }
 
 @end
