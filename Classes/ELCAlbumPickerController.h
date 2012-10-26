@@ -29,5 +29,9 @@
 -(BOOL)canDeselectAsset:(ELCAsset *)asset;
 -(void)selectedAssets:(NSArray*)_assets;
 
+#pragma mark - Protected interface
+
+- (void)reloadTableView;
+
 @end
 
