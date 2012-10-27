@@ -28,7 +28,7 @@
 	
 	UIBarButtonItem *doneButtonItem = [[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(doneAction:)] autorelease];
 	[self.navigationItem setRightBarButtonItem:doneButtonItem];
-	[self.navigationItem setTitle:@"Loading..."];
+	[self setTitle:[self titleForLoadingMedia]];
 
 	[self performSelectorInBackground:@selector(preparePhotos) withObject:nil];
     
@@ -54,12 +54,13 @@
          [self.elcAssets addObject:elcAsset];
      }];    
     NSLog(@"done enumerating photos");
-	
-	[self.tableView reloadData];
-	[self.navigationItem setTitle:@"Pick Photos"];
-    
-    [pool release];
 
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.tableView reloadData];
+        [self setTitle:[self titleForSelectingMedia]];
+    });
+
+    [pool release];
 }
 
 - (void) doneAction:(id)sender {
@@ -188,6 +189,18 @@
 - (BOOL)assetCanBeDeselected:(ELCAsset *)asset
 {
     return [[self parent] canDeselectAsset:asset];
+}
+
+#pragma mark - Protected interface
+
+- (NSString *)titleForLoadingMedia
+{
+    return @"Loading...";
+}
+
+- (NSString *)titleForSelectingMedia
+{
+    return @"Pick Photos";
 }
 
 @end

@@ -31,7 +31,8 @@
 
 #pragma mark - Protected interface
 
-- (void)reloadTableView;
+- (NSString *)titleForLoadingAlbums;
+- (NSString *)titleForSelectingAlbums;
 
 @end
 

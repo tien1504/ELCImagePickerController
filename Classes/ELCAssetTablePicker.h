@@ -34,4 +34,9 @@
 
 -(void)doneAction:(id)sender;
 
+#pragma mark - Protected interface
+
+- (NSString *)titleForLoadingMedia;
+- (NSString *)titleForSelectingMedia;
+
 @end

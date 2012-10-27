@@ -19,7 +19,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
 	
-	[self.navigationItem setTitle:@"Loading..."];
+	[self setTitle:[self titleForLoadingAlbums]];
 
     UIBarButtonItem *cancelButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCancel target:self.parent action:@selector(cancelImagePicker)];
 	[self.navigationItem setRightBarButtonItem:cancelButton];
@@ -72,7 +72,7 @@
 -(void)reloadTableView {
 	
 	[self.tableView reloadData];
-	[self.navigationItem setTitle:@"Select an Album"];
+	[self setTitle:[self titleForSelectingAlbums]];
 }
 
 -(void)selectedAssets:(NSArray*)_assets {
@@ -172,6 +172,16 @@
     [assetGroups release];
     [library release];
     [super dealloc];
+}
+
+- (NSString *)titleForLoadingAlbums
+{
+
+}
+
+- (NSString *)titleForSelectingAlbums
+{
+    return @"Select an Album";
 }
 
 @end
