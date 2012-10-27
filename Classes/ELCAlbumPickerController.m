@@ -176,7 +176,7 @@
 
 - (NSString *)titleForLoadingAlbums
 {
-
+    return @"Loading...";
 }
 
 - (NSString *)titleForSelectingAlbums
