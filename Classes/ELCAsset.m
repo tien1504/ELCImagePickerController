@@ -8,6 +8,11 @@
 #import "ELCAsset.h"
 #import "ELCAssetTablePicker.h"
 
+#import "QWMovieThumbnailOverlayView.h"
+#import "UIView+QWFonts.h"
+#import "NSString+GeneralHelpers.h"
+
+
 @implementation ELCAsset
 
 @synthesize asset;
@@ -35,7 +40,38 @@
 		[assetImageView setImage:[UIImage imageWithCGImage:[self.asset thumbnail]]];
 		[self addSubview:assetImageView];
 		[assetImageView release];
-		
+
+        // jad: this should be in a subclass somewhere
+        if ([[[self asset] valueForProperty:@"ALAssetPropertyType"] isEqualToString:ALAssetTypeVideo]) {
+            /*
+            CGFloat height = 20;
+            CGRect thumbnailFrame = CGRectMake(0, viewFrames.size.height - height, viewFrames.size.height, height);
+            QWMovieThumbnailOverlayView *view = [[QWMovieThumbnailOverlayView alloc] initWithFrame:thumbnailFrame];
+            [self addSubview:view];
+            [view release];
+             */
+
+            CGRect bounds = [self bounds];
+            const CGFloat OverlayHeight = 25;
+            CGRect overlayFrame = CGRectMake(0, bounds.size.height - OverlayHeight, bounds.size.width, OverlayHeight);
+            UIView *overlay = [[UIView alloc] initWithFrame:overlayFrame];
+            [overlay setBackgroundColor:[[UIColor blackColor] colorWithAlphaComponent:0.5]];
+            [overlay setAutoresizingMask:UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleTopMargin];
+            [self addSubview:overlay];
+
+            const CGFloat LabelPadding = 20;
+            CGRect labelFrame =
+                CGRectMake(45, overlayFrame.origin.y, overlayFrame.size.width - LabelPadding * 2, overlayFrame.size.height);
+            UILabel *durationLabel = [[UILabel alloc] initWithFrame:labelFrame];
+            [durationLabel setBackgroundColor:[UIColor clearColor]];
+            [durationLabel setTextColor:[UIColor whiteColor]];
+            [durationLabel setAutoresizingMask:[overlay autoresizingMask]];
+            [durationLabel applyRegularFontOfSize:12];
+            NSNumber *duration = [[self asset] valueForProperty:ALAssetPropertyDuration];
+            [durationLabel setText:[NSString stringForDuration:[duration floatValue]]];
+            [self addSubview:durationLabel];
+        }
+
 		overlayView = [[UIImageView alloc] initWithFrame:viewFrames];
 		[overlayView setImage:[self overlayImage]];
         [self configureOverlayImage];
