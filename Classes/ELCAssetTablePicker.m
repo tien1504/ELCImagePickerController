@@ -30,37 +30,40 @@
 	[self.navigationItem setRightBarButtonItem:doneButtonItem];
 	[self setTitle:[self titleForLoadingMedia]];
 
-	[self performSelectorInBackground:@selector(preparePhotos) withObject:nil];
-    
+    [self preparePhotos];
+
     // Show partial while full list loads
 	[self.tableView performSelector:@selector(reloadData) withObject:nil afterDelay:.5];
 }
 
 -(void)preparePhotos {
-    
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
-	
-    NSLog(@"enumerating photos");
-    [self.assetGroup enumerateAssetsUsingBlock:^(ALAsset *result, NSUInteger index, BOOL *stop) 
-     {         
-         if(result == nil) 
-         {
-             return;
-         }
-         
-         ELCAsset *elcAsset = [[[ELCAsset alloc] initWithAsset:result] autorelease];
-         [elcAsset setParent:self];
-         [self.elcAssets addObject:elcAsset];
-     }];    
-    NSLog(@"done enumerating photos");
+    NSMutableArray *assets = [NSMutableArray array];
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
+        NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [self.tableView reloadData];
-        [self setTitle:[self titleForSelectingMedia]];
+        NSLog(@"enumerating photos");
+        [self.assetGroup enumerateAssetsUsingBlock:^(ALAsset *result, NSUInteger index, BOOL *stop) 
+         {         
+             if(result == nil) 
+             {
+                 return;
+             }
+             
+             ELCAsset *elcAsset = [[[ELCAsset alloc] initWithAsset:result] autorelease];
+             [elcAsset setParent:self];
+             [assets addObject:elcAsset];
+         }];
+        NSLog(@"done enumerating photos");
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+            self.elcAssets = [NSArray arrayWithArray:assets];
+            [self.tableView reloadData];
+            [self setTitle:[self titleForSelectingMedia]];
+        });
+
+        [pool release];
     });
-
-    [pool release];
 }
 
 - (void) doneAction:(id)sender {
