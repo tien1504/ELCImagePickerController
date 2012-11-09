@@ -39,7 +39,7 @@
 -(void)preparePhotos {
 
     NSMutableArray *assets = [NSMutableArray array];
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
         NSLog(@"enumerating photos");
@@ -59,6 +59,10 @@
         dispatch_async(dispatch_get_main_queue(), ^{
             self.elcAssets = [NSArray arrayWithArray:assets];
             [self.tableView reloadData];
+
+            NSInteger nrows = [self tableView:[self tableView] numberOfRowsInSection:0];
+            NSIndexPath *lastRow = [NSIndexPath indexPathForRow:nrows - 1 inSection:0];
+            [[self tableView] scrollToRowAtIndexPath:lastRow atScrollPosition:UITableViewScrollPositionBottom animated:NO];
             [self setTitle:[self titleForSelectingMedia]];
         });
 
