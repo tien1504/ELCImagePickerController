@@ -30,7 +30,11 @@
 	[self.navigationItem setRightBarButtonItem:doneButtonItem];
 	[self setTitle:[self titleForLoadingMedia]];
 
-    [self preparePhotos];
+    //int64_t delayInSeconds = 2.0;
+    //dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, delayInSeconds * NSEC_PER_SEC);
+    //dispatch_after(popTime, dispatch_get_main_queue(), ^(void){
+        [self preparePhotos];
+    //});
 
     // Show partial while full list loads
 	[self.tableView performSelector:@selector(reloadData) withObject:nil afterDelay:.5];
@@ -39,7 +43,7 @@
 -(void)preparePhotos {
 
     NSMutableArray *assets = [NSMutableArray array];
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
         NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
         NSLog(@"enumerating photos");

@@ -42,7 +42,7 @@
 		[assetImageView release];
 
         // jad: this should be in a subclass somewhere
-        if ([[[self asset] valueForProperty:@"ALAssetPropertyType"] isEqualToString:ALAssetTypeVideo]) {
+        if ([[[self asset] valueForProperty:ALAssetPropertyType] isEqualToString:ALAssetTypeVideo]) {
             /*
             CGFloat height = 20;
             CGRect thumbnailFrame = CGRectMake(0, viewFrames.size.height - height, viewFrames.size.height, height);

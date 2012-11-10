@@ -70,6 +70,7 @@
 
 - (void)dealloc {
     NSLog(@"deallocing ELCImagePickerController");
+    self.delegate = nil;
     [super dealloc];
 }
 
