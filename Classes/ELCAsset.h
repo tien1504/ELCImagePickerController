@@ -36,6 +36,7 @@
 
 - (BOOL)assetCanBeSelected:(ELCAsset *)asset;
 - (BOOL)assetCanBeDeselected:(ELCAsset *)asset;
+- (void)asset:(ELCAsset *)asset wasSelected:(BOOL)selected;
 
 - (UIImage *)overlayImageForAsset:(ELCAsset *)asset;
 

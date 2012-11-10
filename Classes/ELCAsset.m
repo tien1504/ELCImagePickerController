@@ -77,6 +77,7 @@
         [self configureOverlayImage];
 		[overlayView setHidden:YES];
 		[self addSubview:overlayView];
+        [overlayView release];
     }
     
 	return self;	
@@ -85,13 +86,16 @@
 -(void)toggleSelection {
 
     id<ELCAssetDelegate> del = [self delegate];
-    SEL selector = overlayView.hidden ? @selector(assetCanBeSelected:) : @selector(assetCanBeDeselected:);
+    SEL selector = [self selected] ? @selector(assetCanBeDeselected:) : @selector(assetCanBeSelected:);
     BOOL shouldToggle = [del respondsToSelector:selector] ? (BOOL) [del performSelector:selector withObject:self] : YES;
 
     if (shouldToggle) {
         overlayView.hidden = !overlayView.hidden;
         [overlayView setImage:[self overlayImage]];
         [self configureOverlayImage];
+
+        if ([del respondsToSelector:@selector(asset:wasSelected:)])
+            [del asset:self wasSelected:[self selected]];
     }
 
 //    if([(ELCAssetTablePicker*)self.parent totalSelectedAssets] >= 10) {

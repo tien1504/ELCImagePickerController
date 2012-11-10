@@ -16,21 +16,14 @@
 {
 	ALAssetsGroup *assetGroup;
 	
-	NSMutableArray *elcAssets;
-	int selectedAssets;
-	
 	ELCAlbumPickerController *parent;
-	
-	NSOperationQueue *queue;
 }
 
 @property (nonatomic, assign) ELCAlbumPickerController *parent;
 @property (nonatomic, assign) ALAssetsGroup *assetGroup;
-@property (nonatomic, retain) NSMutableArray *elcAssets;
 @property (nonatomic, retain) IBOutlet UILabel *selectedAssetsLabel;
 
 -(int)totalSelectedAssets;
--(void)preparePhotos;
 
 -(void)doneAction:(id)sender;
 
