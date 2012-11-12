@@ -39,6 +39,14 @@ static const NSInteger MAX_THUMBNAILS_PER_ROW = 4;
 
     // Show partial while full list loads
 	//[self.tableView performSelector:@selector(reloadData) withObject:nil afterDelay:.5];
+
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0), dispatch_get_main_queue(), ^{
+        NSInteger rowCount = [self tableView:[self tableView] numberOfRowsInSection:0];
+        if (rowCount) {
+            NSIndexPath *path = [NSIndexPath indexPathForRow:rowCount - 1 inSection:0];
+            [[self tableView] scrollToRowAtIndexPath:path atScrollPosition:UITableViewScrollPositionBottom animated:NO];
+        }
+    });
 }
 
 - (void) doneAction:(id)sender {
