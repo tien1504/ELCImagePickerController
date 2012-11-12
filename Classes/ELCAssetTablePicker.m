@@ -62,7 +62,7 @@ static const NSInteger MAX_THUMBNAILS_PER_ROW = 4;
 
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    return ceil([self.assetGroup numberOfAssets] / MAX_THUMBNAILS_PER_ROW);
+    return ceil([self.assetGroup numberOfAssets] / (float) MAX_THUMBNAILS_PER_ROW);
 }
 
 - (NSArray*)assetsForIndexPath:(NSIndexPath*)indexPath {

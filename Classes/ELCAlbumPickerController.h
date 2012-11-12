@@ -13,17 +13,17 @@
 
 @interface ELCAlbumPickerController : UITableViewController {
 	
-	NSMutableArray *assetGroups;
-	NSOperationQueue *queue;
+	NSMutableArray *_assetGroups;
+    ALAssetsLibrary *_assetsLibrary;
+
 	ELCImagePickerController *parent;
     
-    ALAssetsLibrary *library;
     ALAssetsFilter *assetsFilter;
 }
 
+@property (nonatomic, retain) NSMutableArray *assetGroups;
 @property (nonatomic, retain) ALAssetsFilter *assetsFilter;
 @property (nonatomic, assign) ELCImagePickerController *parent;
-@property (nonatomic, retain) NSMutableArray *assetGroups;
 
 -(BOOL)canSelectAsset:(ELCAsset *)asset;
 -(BOOL)canDeselectAsset:(ELCAsset *)asset;
