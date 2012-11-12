@@ -77,7 +77,6 @@
         [self configureOverlayImage];
 		[overlayView setHidden:YES];
 		[self addSubview:overlayView];
-        [overlayView release];
     }
     
 	return self;	
