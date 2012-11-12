@@ -15,7 +15,7 @@ static const NSInteger MAX_THUMBNAILS_PER_ROW = 4;
 
 
 @interface ELCAssetTablePicker ()
-@property (nonatomic, strong) NSMutableArray *selectedAssets;
+@property (nonatomic, retain) NSMutableArray *selectedAssets;
 @end
 
 
@@ -38,7 +38,7 @@ static const NSInteger MAX_THUMBNAILS_PER_ROW = 4;
 	[self setTitle:[self titleForLoadingMedia]];
 
     // Show partial while full list loads
-	[self.tableView performSelector:@selector(reloadData) withObject:nil afterDelay:.5];
+	//[self.tableView performSelector:@selector(reloadData) withObject:nil afterDelay:.5];
 }
 
 - (void) doneAction:(id)sender {
@@ -66,10 +66,11 @@ static const NSInteger MAX_THUMBNAILS_PER_ROW = 4;
 
     NSMutableArray *views = [NSMutableArray arrayWithCapacity:[indexes count]];
     [group enumerateAssetsAtIndexes:indexes options:0 usingBlock:^(ALAsset *result, NSUInteger index, BOOL *stop) {
-        ELCAsset *assetView = [[[ELCAsset alloc] initWithAsset:result] autorelease];
+        ELCAsset *assetView = [[ELCAsset alloc] initWithAsset:result];
         [assetView setParent:self];
         [assetView setDelegate:self];
         [views addObject:assetView];
+        [assetView release];
     }];
 
     return views;

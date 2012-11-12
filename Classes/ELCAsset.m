@@ -19,13 +19,6 @@
 @synthesize parent;
 @synthesize delegate;
 
-- (id)initWithFrame:(CGRect)frame {
-    if ((self = [super initWithFrame:frame])) {
-        // Initialization code
-    }
-    return self;
-}
-
 -(id)initWithAsset:(ALAsset*)_asset {
 	
 	if (self = [super initWithFrame:CGRectMake(0, 0, 0, 0)]) {
@@ -58,6 +51,7 @@
             [overlay setBackgroundColor:[[UIColor blackColor] colorWithAlphaComponent:0.5]];
             [overlay setAutoresizingMask:UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleTopMargin];
             [self addSubview:overlay];
+            [overlay release], overlay = nil;
 
             const CGFloat LabelPadding = 20;
             CGRect labelFrame =
@@ -70,6 +64,7 @@
             NSNumber *duration = [[self asset] valueForProperty:ALAssetPropertyDuration];
             [durationLabel setText:[NSString stringForDuration:[duration floatValue]]];
             [self addSubview:durationLabel];
+            [durationLabel release], durationLabel = nil;
         }
 
 		overlayView = [[UIImageView alloc] initWithFrame:viewFrames];
