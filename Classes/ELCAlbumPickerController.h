@@ -6,33 +6,41 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "ELCAssetTablePicker.h"
 #import <AssetsLibrary/AssetsLibrary.h>
 
-@class ELCImagePickerController;
-@class ELCAsset;
 
-@interface ELCAlbumPickerController : UITableViewController {
+@protocol ELCAlbumPickerControllerDelegate;
+
+@interface ELCAlbumPickerController : UITableViewController <ELCAssetTablePickerDelegate>
 	
-	NSMutableArray *_assetGroups;
-    ALAssetsLibrary *_assetsLibrary;
+@property (nonatomic, assign) id<ELCAlbumPickerControllerDelegate> delegate;
 
-	ELCImagePickerController *parent;
-    
-    ALAssetsFilter *assetsFilter;
-}
+@property (nonatomic, strong) ALAssetsLibrary *assetsLibrary;
+@property (nonatomic, strong) ALAssetsFilter *assetsFilter;
+@property (nonatomic, strong, readonly) NSArray *assetGroups;
 
-@property (nonatomic, retain) NSMutableArray *assetGroups;
-@property (nonatomic, retain) ALAssetsFilter *assetsFilter;
-@property (nonatomic, assign) ELCImagePickerController *parent;
+#pragma mark - UI actions
 
--(BOOL)canSelectAsset:(ELCAsset *)asset;
--(BOOL)canDeselectAsset:(ELCAsset *)asset;
--(void)selectedAssets:(NSArray*)_assets;
+- (void)cancelButtonTapped:(UIBarButtonItem *)sender;
 
-#pragma mark - Protected interface
+@end
 
-- (NSString *)titleForLoadingAlbums;
-- (NSString *)titleForSelectingAlbums;
+
+@protocol ELCAlbumPickerControllerDelegate <NSObject>
+
+- (NSString *)albumPickerControllerTitleForLoadingAlbums:(ELCAlbumPickerController *)controller;
+- (NSString *)albumPickerControllerTitleForSelectingAlbums:(ELCAlbumPickerController *)controller;
+
+- (BOOL)albumPickerController:(ELCAlbumPickerController *)controller canSelectAsset:(ALAsset *)asset;
+- (void)albumPickerController:(ELCAlbumPickerController *)controller didSelectAsset:(ALAsset *)asset;
+- (BOOL)albumPickerController:(ELCAlbumPickerController *)controller canDeselectAsset:(ALAsset *)asset;
+- (void)albumPickerController:(ELCAlbumPickerController *)controller didDeselectAsset:(ALAsset *)asset;
+
+- (BOOL)albumPickerController:(ELCAlbumPickerController *)controller isAssetSelected:(ALAsset *)asset;
+
+- (void)albumPickerControllerDidCancel:(ELCAlbumPickerController *)controller;
+- (void)albumPickerControllerIsDone:(ELCAlbumPickerController *)controller;
 
 @end
 

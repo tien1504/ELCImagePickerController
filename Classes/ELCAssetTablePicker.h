@@ -6,30 +6,39 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "ELCThumbnailsTableViewCell.h"
 #import <AssetsLibrary/AssetsLibrary.h>
-#import "ELCAsset.h"
 
 
-@class ELCAlbumPickerController;
+@protocol ELCAssetTablePickerDelegate;
 
-@interface ELCAssetTablePicker : UITableViewController <ELCAssetDelegate>
-{
-	ALAssetsGroup *assetGroup;
-	
-	ELCAlbumPickerController *parent;
-}
 
-@property (nonatomic, assign) ELCAlbumPickerController *parent;
-@property (nonatomic, assign) ALAssetsGroup *assetGroup;
-@property (nonatomic, retain) IBOutlet UILabel *selectedAssetsLabel;
+@interface ELCAssetTablePicker : UITableViewController <ELCThumbnailsTableViewCellDelegate>
 
--(int)totalSelectedAssets;
+@property (nonatomic, weak) id<ELCAssetTablePickerDelegate> delegate;
+@property (nonatomic, strong) ALAssetsGroup *assetGroup;
 
--(void)doneAction:(id)sender;
+#pragma mark - UI actions
 
-#pragma mark - Protected interface
+- (void)doneButtonTapped:(UIBarButtonItem *)sender;
 
-- (NSString *)titleForLoadingMedia;
-- (NSString *)titleForSelectingMedia;
+@end
+
+
+@protocol ELCAssetTablePickerDelegate <NSObject>
+
+- (NSString *)assetTablePickerTitleForLoadingMedia:(ELCAssetTablePicker *)pickerController;
+- (NSString *)assetTablePickerTitleForSelectingMedia:(ELCAssetTablePicker *)pickerController;
+
+- (UIImage *)selectedAssetOverlayImage:(ELCAssetTablePicker *)pickerController;
+
+- (BOOL)assetTablePicker:(ELCAssetTablePicker *)pickerController canSelectAsset:(ALAsset *)asset;
+- (void)assetTablePicker:(ELCAssetTablePicker *)pickerController didSelectAsset:(ALAsset *)asset;
+- (BOOL)assetTablePicker:(ELCAssetTablePicker *)pickerController canDeselectAsset:(ALAsset *)asset;
+- (void)assetTablePicker:(ELCAssetTablePicker *)pickerController didDeselectAsset:(ALAsset *)asset;
+
+- (BOOL)assetTablePicker:(ELCAssetTablePicker *)pickerController isAssetSelected:(ALAsset *)asset;
+
+- (void)assetTablePickerIsDone:(ELCAssetTablePicker *)pickerController;
 
 @end

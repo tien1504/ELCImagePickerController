@@ -7,70 +7,117 @@
 //
 
 #import "ELCImagePickerController.h"
-#import "ELCAsset.h"
-#import "ELCAssetCell.h"
 #import "ELCAssetTablePicker.h"
-#import "ELCAlbumPickerController.h"
+
+
+@interface ALAsset (ELCHelpers)
+- (NSDictionary *)mediaInfo;
+@end
+
+
+@interface ELCImagePickerController ()
+@property (nonatomic, strong) NSMutableArray *mutableSelectedAssets;
+@end
+
 
 @implementation ELCImagePickerController
 
-@synthesize delegate;
+#pragma mark - ELCAlbumPickerControllerDelegate implementation
 
--(void)cancelImagePicker {
-	if([delegate respondsToSelector:@selector(elcImagePickerControllerDidCancel:)]) {
-		[delegate performSelector:@selector(elcImagePickerControllerDidCancel:) withObject:self];
-	}
+- (NSString *)albumPickerControllerTitleForLoadingAlbums:(ELCAlbumPickerController *)controller
+{
+    return @"Loading...";
 }
 
--(BOOL)canSelectAsset:(ELCAsset *)asset
+- (NSString *)albumPickerControllerTitleForSelectingAlbums:(ELCAlbumPickerController *)controller
 {
-    BOOL canSelect = YES;
-    id<ELCImagePickerControllerDelegate> del = [self delegate];
-    if ([del respondsToSelector:@selector(elcImagePickerController:shouldSelectMediaWithInfo:)])
-        canSelect = [del elcImagePickerController:self shouldSelectMediaWithInfo:[[asset asset] mediaInfo]];
-
-    return canSelect;
+    return @"Select an Album";
 }
 
-- (BOOL)canDeselectAsset:(ELCAsset *)asset
+- (BOOL)albumPickerController:(ELCAlbumPickerController *)controller canSelectAsset:(ALAsset *)asset
 {
-    id<ELCImagePickerControllerDelegate> del = [self delegate];
-    if ([del respondsToSelector:@selector(elcImagePickerController:shouldDeselectMediaWithInfo:)])
-        [del elcImagePickerController:self shouldDeselectMediaWithInfo:[[asset asset] mediaInfo]];
-
     return YES;
 }
 
--(void)selectedAssets:(NSArray*)_assets {
-
-	NSMutableArray *returnArray = [[[NSMutableArray alloc] init] autorelease];
-	
-	for(ALAsset *asset in _assets) {
-        [returnArray addObject:[asset mediaInfo]];
-	}
-	
-	if([delegate respondsToSelector:@selector(elcImagePickerController:didFinishPickingMediaWithInfo:)]) {
-		[delegate performSelector:@selector(elcImagePickerController:didFinishPickingMediaWithInfo:) withObject:self withObject:[NSArray arrayWithArray:returnArray]];
-	}
+- (void)albumPickerController:(ELCAlbumPickerController *)controller didSelectAsset:(ALAsset *)asset
+{
+    [[self mutableSelectedAssets] addObject:asset];
 }
 
-#pragma mark -
-#pragma mark Memory management
-
-- (void)didReceiveMemoryWarning {    
-    NSLog(@"ELC Image Picker received memory warning.");
-    
-    [super didReceiveMemoryWarning];
+- (BOOL)albumPickerController:(ELCAlbumPickerController *)controller canDeselectAsset:(ALAsset *)asset
+{
+    return YES;
 }
 
-- (void)viewDidUnload {
-    [super viewDidUnload];
+- (void)albumPickerController:(ELCAlbumPickerController *)controller didDeselectAsset:(ALAsset *)asset
+{
+    [[self mutableSelectedAssets] removeObjectAtIndex:[self indexOfAsset:asset]];
 }
 
+- (BOOL)albumPickerController:(ELCAlbumPickerController *)controller isAssetSelected:(ALAsset *)asset
+{
+    return [self indexOfAsset:asset] != NSNotFound;
+}
 
-- (void)dealloc {
-    NSLog(@"deallocing ELCImagePickerController");
-    [super dealloc];
+- (void)albumPickerControllerDidCancel:(ELCAlbumPickerController *)controller
+{
+    [[self delegate] elcImagePickerControllerDidCancel:self];
+}
+
+- (void)albumPickerControllerIsDone:(ELCAlbumPickerController *)controller
+{
+    NSArray *selectedAssets = [self selectedAssets];
+    NSMutableArray *assetInfo = [NSMutableArray arrayWithCapacity:[selectedAssets count]];
+    [selectedAssets enumerateObjectsUsingBlock:^(ALAsset *asset, NSUInteger idx, BOOL *stop) {
+        [assetInfo addObject:[asset mediaInfo]];
+    }];
+
+    [[self delegate] elcImagePickerController:self didFinishPickingMediaWithInfo:[NSArray arrayWithArray:assetInfo]];
+}
+
+#pragma mark - Asset helpers
+
+- (NSInteger)indexOfAsset:(ALAsset *)asset
+{
+    BOOL isURLPropertyAvailable = &ALAssetPropertyAssetURL != NULL;  // only available on iOS 6 and later
+    NSURL *assetURL = isURLPropertyAvailable ? [asset valueForProperty:ALAssetPropertyAssetURL] : [[asset defaultRepresentation] url];
+    NSArray *selectedAssets = [self mutableSelectedAssets];
+
+    return [selectedAssets indexOfObjectPassingTest:^(ALAsset *candidate, NSUInteger idx, BOOL *stop) {
+        NSURL *candidateURL =
+            isURLPropertyAvailable ? [candidate valueForProperty:ALAssetPropertyAssetURL] : [[candidate defaultRepresentation] url];
+        return [candidateURL isEqual:assetURL];
+    }];
+}
+
+#pragma mark - Accessors
+
+- (NSArray *)selectedAssets
+{
+    return [NSArray arrayWithArray:[self mutableSelectedAssets]];
+}
+
+- (NSMutableArray *)mutableSelectedAssets
+{
+    if (!_mutableSelectedAssets)
+        _mutableSelectedAssets = [[NSMutableArray alloc] init];
+
+    return _mutableSelectedAssets;
+}
+
+@end
+
+
+@implementation ALAsset (ELCHelpers)
+
+- (NSDictionary *)mediaInfo
+{
+    NSMutableDictionary *workingDictionary = [NSMutableDictionary dictionary];
+    [workingDictionary setObject:[self valueForProperty:ALAssetPropertyType] forKey:UIImagePickerControllerMediaType];
+    [workingDictionary setObject:[UIImage imageWithCGImage:[[self defaultRepresentation] fullScreenImage]] forKey:UIImagePickerControllerOriginalImage];
+    [workingDictionary setObject:[[self valueForProperty:ALAssetPropertyURLs] valueForKey:[[[self valueForProperty:ALAssetPropertyURLs] allKeys] objectAtIndex:0]] forKey:UIImagePickerControllerReferenceURL];
+
+    return [NSDictionary dictionaryWithDictionary:workingDictionary];
 }
 
 @end

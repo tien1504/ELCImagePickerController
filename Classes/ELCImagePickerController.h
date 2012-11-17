@@ -7,30 +7,20 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "ELCAlbumPickerController.h"
 
 @protocol ELCImagePickerControllerDelegate;
 @class ELCAsset;
 
-@interface ELCImagePickerController : UINavigationController {
+@interface ELCImagePickerController : UINavigationController <ELCAlbumPickerControllerDelegate>
 
-	id<UINavigationControllerDelegate, ELCImagePickerControllerDelegate> delegate;
-}
+@property (nonatomic, weak) id<UINavigationControllerDelegate, ELCImagePickerControllerDelegate> delegate;
 
-@property (nonatomic, assign) id<UINavigationControllerDelegate, ELCImagePickerControllerDelegate> delegate;
-
--(BOOL)canSelectAsset:(ELCAsset *)asset;
-- (BOOL)canDeselectAsset:(ELCAsset *)asset;
--(void)selectedAssets:(NSArray*)_assets;
--(void)cancelImagePicker;
+@property (nonatomic, copy, readonly) NSArray *selectedAssets;
 
 @end
 
 @protocol ELCImagePickerControllerDelegate <NSObject>
-
-@optional
-
-- (BOOL)elcImagePickerController:(ELCImagePickerController *)picker shouldSelectMediaWithInfo:(NSDictionary *)info;
-- (BOOL)elcImagePickerController:(ELCImagePickerController *)picker shouldDeselectMediaWithInfo:(NSDictionary *)info;
 
 - (void)elcImagePickerController:(ELCImagePickerController *)picker didFinishPickingMediaWithInfo:(NSArray *)info;
 - (void)elcImagePickerControllerDidCancel:(ELCImagePickerController *)picker;

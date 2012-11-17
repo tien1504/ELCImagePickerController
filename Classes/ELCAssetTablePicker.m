@@ -6,39 +6,40 @@
 //
 
 #import "ELCAssetTablePicker.h"
-#import "ELCAssetCell.h"
-#import "ELCAsset.h"
-#import "ELCAlbumPickerController.h"
+#import "ELCThumbnailsTableViewCell.h"
 
 
 static const NSInteger MAX_THUMBNAILS_PER_ROW = 4;
 
 
-@interface ELCAssetTablePicker ()
-@property (nonatomic, retain) NSMutableArray *selectedAssets;
-@end
-
-
 @implementation ELCAssetTablePicker
 
-@synthesize parent;
-@synthesize selectedAssetsLabel;
-@synthesize assetGroup;
-@synthesize selectedAssets = _selectedAssets;
+#pragma mark - UI actions
 
--(void)viewDidLoad {
+- (void)doneButtonTapped:(UIBarButtonItem *)sender
+{
+    [[self delegate] assetTablePickerIsDone:self];
+}
 
-    [self setSelectedAssets:[NSMutableArray array]];
-        
+#pragma mark - UITableViewController implementation
+
+-(void)viewDidLoad
+{
+    [super viewDidLoad];
+
 	[self.tableView setSeparatorColor:[UIColor clearColor]];
 	[self.tableView setAllowsSelection:NO];
 
-	UIBarButtonItem *doneButtonItem = [[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(doneAction:)] autorelease];
+	UIBarButtonItem *doneButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone
+                                                                                    target:self
+                                                                                    action:@selector(doneButtonTapped:)];
 	[self.navigationItem setRightBarButtonItem:doneButtonItem];
-	[self setTitle:[self titleForLoadingMedia]];
 
-    // Show partial while full list loads
-	//[self.tableView performSelector:@selector(reloadData) withObject:nil afterDelay:.5];
+	[self setTitle:[[self delegate] assetTablePickerTitleForLoadingMedia:self]];
+
+    [[self tableView] setRowHeight:[ELCThumbnailsTableViewCell cellHeight]];
+    UINib *nib = [UINib nibWithNibName:NSStringFromClass([ELCThumbnailsTableViewCell class]) bundle:nil];
+    [[self tableView] registerNib:nib forCellReuseIdentifier:[ELCThumbnailsTableViewCell reuseIdentifier]];
 
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0), dispatch_get_main_queue(), ^{
         NSInteger rowCount = [self tableView:[self tableView] numberOfRowsInSection:0];
@@ -49,106 +50,73 @@ static const NSInteger MAX_THUMBNAILS_PER_ROW = 4;
     });
 }
 
-- (void) doneAction:(id)sender {
-    [self.parent selectedAssets:[self selectedAssets]];
+#pragma mark - ELCThumbnailsTableViewCellDelegate implementation
+
+- (BOOL)tumbnailsTableViewCell:(ELCThumbnailsTableViewCell *)cell canToggleSelectionOfAsset:(ALAsset *)asset
+{
+    if ([self isAssetSelected:asset])
+        return [[self delegate] assetTablePicker:self canDeselectAsset:asset];
+    else
+        return [[self delegate] assetTablePicker:self canSelectAsset:asset];
 }
 
-#pragma mark UITableViewDataSource Delegate Methods
-
-- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
-    // Return the number of sections.
-    return 1;
+- (void)tumbnailsTableViewCell:(ELCThumbnailsTableViewCell *)cell didToggleSelectionOfAsset:(ALAsset *)asset
+{
+    if ([self isAssetSelected:asset])
+        [[self delegate] assetTablePicker:self didDeselectAsset:asset];
+    else
+        [[self delegate] assetTablePicker:self didSelectAsset:asset];
 }
 
+#pragma mark UITableViewDataSource implementation
 
-- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
     return ceil([self.assetGroup numberOfAssets] / (float) MAX_THUMBNAILS_PER_ROW);
 }
 
-- (NSArray*)assetsForIndexPath:(NSIndexPath*)indexPath {
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    NSString *reuseIdentifier = [ELCThumbnailsTableViewCell reuseIdentifier];
+    ELCThumbnailsTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:reuseIdentifier];
+    [cell setSelectedAssetOverlayImage:[[self delegate] selectedAssetOverlayImage:self]];
+    [cell setDelegate:self];
 
+    NSArray *assets = [self assetsForIndexPath:indexPath];
+    [cell setAssets:assets];
+    [cell setSelectedAssetIndexes:[self indexesOfSelectedAssets:assets]];
+
+    return cell;
+}
+
+#pragma mark - Asset helpers
+
+- (NSArray*)assetsForIndexPath:(NSIndexPath*)indexPath
+{
     ALAssetsGroup *group  = [self assetGroup];
     NSInteger startIndex = [indexPath row] * MAX_THUMBNAILS_PER_ROW;
     NSInteger endIndex = startIndex + MIN([group numberOfAssets] - startIndex, MAX_THUMBNAILS_PER_ROW);
     NSIndexSet *indexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(startIndex, endIndex - startIndex)];
 
-    NSMutableArray *views = [NSMutableArray arrayWithCapacity:[indexes count]];
-    [group enumerateAssetsAtIndexes:indexes options:0 usingBlock:^(ALAsset *result, NSUInteger index, BOOL *stop) {
-        ELCAsset *assetView = [[ELCAsset alloc] initWithAsset:result];
-        [assetView setParent:self];
-        [assetView setDelegate:self];
-        [views addObject:assetView];
-        [assetView release];
+    NSMutableArray *assets = [NSMutableArray arrayWithCapacity:[indexes count]];
+    [group enumerateAssetsAtIndexes:indexes options:0 usingBlock:^(ALAsset *asset, NSUInteger index, BOOL *stop) {
+        if (index != NSNotFound)
+            [assets addObject:asset];
     }];
 
-    return views;
+    return [NSArray arrayWithArray:assets];
 }
 
-// Customize the appearance of table view cells.
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    
-    static NSString *CellIdentifier = @"Cell";
-        
-    ELCAssetCell *cell = (ELCAssetCell*)[tableView dequeueReusableCellWithIdentifier:CellIdentifier];
-
-    if (cell == nil) 
-    {		        
-        cell = [[[ELCAssetCell alloc] initWithAssets:[self assetsForIndexPath:indexPath] reuseIdentifier:CellIdentifier] autorelease];
-    }	
-	else 
-    {		
-		[cell setAssets:[self assetsForIndexPath:indexPath]];
-	}
-    
-    return cell;
-}
-
-- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-    
-	return 79;
-}
-
-- (int)totalSelectedAssets {
-    return [[self selectedAssets] count];
-}
-
-- (void)dealloc 
+- (NSIndexSet *)indexesOfSelectedAssets:(NSArray *)assets
 {
-    [_selectedAssets release];
-    [selectedAssetsLabel release];
-    [super dealloc];    
+    return [assets indexesOfObjectsPassingTest:^BOOL(ALAsset *asset, NSUInteger idx, BOOL *stop) {
+        return [self isAssetSelected:asset];
+    }];
 }
 
-#pragma mark - ELCAssetDelegate implementation
-
-- (BOOL)assetCanBeSelected:(ELCAsset *)asset
+- (BOOL)isAssetSelected:(ALAsset *)asset
 {
-    return [[self parent] canSelectAsset:asset];
-}
-
-- (BOOL)assetCanBeDeselected:(ELCAsset *)asset
-{
-    return [[self parent] canDeselectAsset:asset];
-}
-
-- (void)asset:(ELCAsset *)assetView wasSelected:(BOOL)selected
-{
-    if (selected)
-        [[self selectedAssets] addObject:[assetView asset]];
-    else
-        [[self selectedAssets] removeObject:[assetView asset]];
-}
-
-#pragma mark - Protected interface
-
-- (NSString *)titleForLoadingMedia
-{
-    return @"Loading...";
-}
-
-- (NSString *)titleForSelectingMedia
-{
-    return @"Pick Photos";
+    return [[self delegate] assetTablePicker:self isAssetSelected:asset];
 }
 
 @end

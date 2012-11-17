@@ -9,70 +9,58 @@
 #import "ELCImagePickerController.h"
 #import "ELCAssetTablePicker.h"
 
+
 @interface ELCAlbumPickerController ()
-@property (nonatomic, retain) ALAssetsLibrary *assetsLibrary;
+@property (nonatomic, strong) NSArray *assetGroups;
 @end
 
 
 @implementation ELCAlbumPickerController
 
-@synthesize parent, assetGroups = _assetGroups, assetsFilter, assetsLibrary = _assetsLibrary;
+#pragma mark - UI actions
 
-#pragma mark -
-#pragma mark View lifecycle
+- (void)cancelButtonTapped:(UIBarButtonItem *)sender
+{
+    [[self delegate] albumPickerControllerDidCancel:self];
+}
 
-- (void)viewDidLoad {
+#pragma mark - UITableViewController implementation
+
+- (void)viewDidLoad
+{
     [super viewDidLoad];
 	
-    UIBarButtonItem *cancelButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCancel target:self.parent action:@selector(cancelImagePicker)];
+    UIBarButtonItem *cancelButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCancel
+                                                                                  target:self
+                                                                                  action:@selector(cancelButtonTapped:)];
 	[self.navigationItem setRightBarButtonItem:cancelButton];
-	[cancelButton release];
+
+    [[self tableView] setRowHeight:57];
 
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0), dispatch_get_main_queue(), ^{
         [self loadAssetGroups];
     });
 }
 
--(void)selectedAssets:(NSArray*)_assets {
-	
-	[parent selectedAssets:_assets];
+#pragma mark - UITableViewDataSource implementation
 
-}
-
--(BOOL)canSelectAsset:(ELCAsset *)asset {
-
-    return [parent canSelectAsset:asset];
-
-}
-
--(BOOL)canDeselectAsset:(ELCAsset *)asset {
-
-    return [parent canDeselectAsset:asset];
-
-}
-
-#pragma mark -
-#pragma mark Table view data source
-
-- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
     return [self assetGroups] ? 1 : 0;
 }
 
-
-- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    // Return the number of rows in the section.
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
     return [[self assetGroups] count];
 }
 
-
-// Customize the appearance of table view cells.
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
     static NSString *CellIdentifier = @"Cell";
     
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CellIdentifier];
     if (cell == nil) {
-        cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier] autorelease];
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
     }
     
     // Get count
@@ -87,25 +75,65 @@
     return cell;
 }
 
-#pragma mark -
-#pragma mark Table view delegate
+#pragma mark - UITableViewDelegate implementation
 
-- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-	
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
 	ELCAssetTablePicker *picker = [[ELCAssetTablePicker alloc] initWithNibName:@"ELCAssetTablePicker" bundle:[NSBundle mainBundle]];
-	picker.parent = self;
+    [picker setDelegate:self];
 
     // Move me
     picker.assetGroup = [[self assetGroups] objectAtIndex:indexPath.row];
     [picker.assetGroup setAssetsFilter:[self assetsFilter]];
     
 	[self.navigationController pushViewController:picker animated:YES];
-	[picker release];
 }
 
-- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-	
-	return 57;
+#pragma mark - ELCAssetTablePickerDelegate implementation
+
+- (NSString *)assetTablePickerTitleForLoadingMedia:(ELCAssetTablePicker *)pickerController
+{
+    return @"Loading...";
+}
+
+- (NSString *)assetTablePickerTitleForSelectingMedia:(ELCAssetTablePicker *)pickerController
+{
+    return @"Pick Photos";
+}
+
+- (UIImage *)selectedAssetOverlayImage:(ELCAssetTablePicker *)pickerController
+{
+    return [UIImage imageNamed:@"Overlay"];
+}
+
+- (BOOL)assetTablePicker:(ELCAssetTablePicker *)pickerController canSelectAsset:(ALAsset *)asset
+{
+    return [[self delegate] albumPickerController:self canSelectAsset:asset];
+}
+
+- (void)assetTablePicker:(ELCAssetTablePicker *)pickerController didSelectAsset:(ALAsset *)asset
+{
+    return [[self delegate] albumPickerController:self didSelectAsset:asset];
+}
+
+- (BOOL)assetTablePicker:(ELCAssetTablePicker *)pickerController canDeselectAsset:(ALAsset *)asset
+{
+    return [[self delegate] albumPickerController:self canDeselectAsset:asset];
+}
+
+- (void)assetTablePicker:(ELCAssetTablePicker *)pickerController didDeselectAsset:(ALAsset *)asset
+{
+    return [[self delegate] albumPickerController:self didDeselectAsset:asset];
+}
+
+- (BOOL)assetTablePicker:(ELCAssetTablePicker *)pickerController isAssetSelected:(ALAsset *)asset
+{
+    return [[self delegate] albumPickerController:self isAssetSelected:asset];
+}
+
+- (void)assetTablePickerIsDone:(ELCAssetTablePicker *)pickerController
+{
+    [[self delegate] albumPickerControllerIsDone:self];
 }
 
 #pragma mark -
@@ -113,17 +141,22 @@
 
 - (void)loadAssetGroups
 {
-	[self setTitle:[self titleForLoadingAlbums]];
+	[self setTitle:[[self delegate] albumPickerControllerTitleForLoadingAlbums:self]];
 
     NSMutableArray *assetGroups = [NSMutableArray array];
     ALAssetsLibrary *library = [self assetsLibrary];
-    NSArray *types = @[ @(ALAssetsGroupSavedPhotos), @(ALAssetsGroupPhotoStream), @(ALAssetsGroupAlbum) ];
+    NSArray *types = @[ @(ALAssetsGroupSavedPhotos),
+                        @(ALAssetsGroupLibrary),
+                        @(ALAssetsGroupPhotoStream),
+                        @(ALAssetsGroupAlbum),
+                        @(ALAssetsGroupEvent),
+                        @(ALAssetsGroupFaces) ];
     __block NSInteger count = [types count];
     [types enumerateObjectsUsingBlock:^(NSNumber *type, NSUInteger idx, BOOL *stop) {
         [self loadAssetsGroupsWithType:[type integerValue] fromLibrary:library completion:^(NSArray *groups) {
             [assetGroups addObjectsFromArray:groups];
             if (--count == 0) {
-                [self setTitle:[self titleForSelectingAlbums]];
+                [self setTitle:[[self delegate] albumPickerControllerTitleForSelectingAlbums:self]];
 
                 [self setAssetGroups:assetGroups];
                 NSIndexSet *sections = [NSIndexSet indexSetWithIndex:0];
@@ -152,37 +185,8 @@
                                                                              delegate:nil cancelButtonTitle:@"OK"
                                                                     otherButtonTitles:nil];
                              [alert show];
-                             [alert release];
                              NSLog(@"A problem occured %@", error);
                          }];
-}
-
-#pragma mark -
-#pragma mark Memory management
-
-- (void)dealloc
-{	
-    [_assetGroups release];
-    [_assetsLibrary release];
-    [super dealloc];
-}
-
-- (NSString *)titleForLoadingAlbums
-{
-    return @"Loading...";
-}
-
-- (NSString *)titleForSelectingAlbums
-{
-    return @"Select an Album";
-}
-
-- (ALAssetsLibrary *)assetsLibrary
-{
-    if (!_assetsLibrary)
-        _assetsLibrary = [[ALAssetsLibrary alloc] init];
-
-    return _assetsLibrary;
 }
 
 @end
