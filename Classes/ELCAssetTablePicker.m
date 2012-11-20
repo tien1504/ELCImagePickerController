@@ -28,16 +28,8 @@ static const NSInteger MAX_THUMBNAILS_PER_ROW = 4;
 
 #pragma mark - UITableViewController implementation
 
-- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
-    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
-    if (self) {
-    }
-    return self;
-}
-
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
-    [self loadAssets];
 }
 
 -(void)viewDidLoad
@@ -51,22 +43,24 @@ static const NSInteger MAX_THUMBNAILS_PER_ROW = 4;
                                                                                     target:self
                                                                                     action:@selector(doneButtonTapped:)];
 	[self.navigationItem setRightBarButtonItem:doneButtonItem];
-
-	[self setTitle:[[self delegate] assetTablePickerTitleForLoadingMedia:self]];
+    
+    [self setTitle:[[self delegate] assetTablePickerTitleForLoadingMedia:self]];
 
     [[self tableView] setRowHeight:[ELCThumbnailsTableViewCell cellHeight]];
     UINib *nib = [UINib nibWithNibName:NSStringFromClass([ELCThumbnailsTableViewCell class]) bundle:nil];
     [[self tableView] registerNib:nib forCellReuseIdentifier:[ELCThumbnailsTableViewCell reuseIdentifier]];
-
+    
     /*
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0), dispatch_get_main_queue(), ^{
-        NSInteger rowCount = [self tableView:[self tableView] numberOfRowsInSection:0];
-        if (rowCount) {
-            NSIndexPath *path = [NSIndexPath indexPathForRow:rowCount - 1 inSection:0];
-            [[self tableView] scrollToRowAtIndexPath:path atScrollPosition:UITableViewScrollPositionBottom animated:NO];
-        }
-    });
+     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0), dispatch_get_main_queue(), ^{
+     NSInteger rowCount = [self tableView:[self tableView] numberOfRowsInSection:0];
+     if (rowCount) {
+     NSIndexPath *path = [NSIndexPath indexPathForRow:rowCount - 1 inSection:0];
+     [[self tableView] scrollToRowAtIndexPath:path atScrollPosition:UITableViewScrollPositionBottom animated:NO];
+     }
+     });
      */
+
+    [self performSelectorInBackground:@selector(loadAssets) withObject:nil];
 }
 
 - (void)loadAssets {
@@ -80,6 +74,9 @@ static const NSInteger MAX_THUMBNAILS_PER_ROW = 4;
         
         if (asset != nil) {
             [_assetArray addObject:asset];
+        } else {
+            [self.tableView reloadData];
+            [self setTitle:[[self delegate] assetTablePickerTitleForSelectingMedia:self]];
         }
     };
     
