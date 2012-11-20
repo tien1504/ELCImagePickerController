@@ -11,6 +11,11 @@
 
 static const NSInteger MAX_THUMBNAILS_PER_ROW = 4;
 
+@interface ELCAssetTablePicker ()
+
+@property (nonatomic, strong) NSMutableArray *assetArray;
+
+@end
 
 @implementation ELCAssetTablePicker
 
@@ -23,10 +28,22 @@ static const NSInteger MAX_THUMBNAILS_PER_ROW = 4;
 
 #pragma mark - UITableViewController implementation
 
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil {
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+    }
+    return self;
+}
+
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    [self loadAssets];
+}
+
 -(void)viewDidLoad
 {
     [super viewDidLoad];
-
+    
 	[self.tableView setSeparatorColor:[UIColor clearColor]];
 	[self.tableView setAllowsSelection:NO];
 
@@ -41,6 +58,7 @@ static const NSInteger MAX_THUMBNAILS_PER_ROW = 4;
     UINib *nib = [UINib nibWithNibName:NSStringFromClass([ELCThumbnailsTableViewCell class]) bundle:nil];
     [[self tableView] registerNib:nib forCellReuseIdentifier:[ELCThumbnailsTableViewCell reuseIdentifier]];
 
+    /*
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0), dispatch_get_main_queue(), ^{
         NSInteger rowCount = [self tableView:[self tableView] numberOfRowsInSection:0];
         if (rowCount) {
@@ -48,6 +66,24 @@ static const NSInteger MAX_THUMBNAILS_PER_ROW = 4;
             [[self tableView] scrollToRowAtIndexPath:path atScrollPosition:UITableViewScrollPositionBottom animated:NO];
         }
     });
+     */
+}
+
+- (void)loadAssets {
+    if ([_assetArray count] > 0) {
+        return;
+    }
+    
+    _assetArray = [NSMutableArray array];
+        
+    ALAssetsGroupEnumerationResultsBlock resultsBlock = ^(ALAsset *asset, NSUInteger index, BOOL *stop) {
+        
+        if (asset != nil) {
+            [_assetArray addObject:asset];
+        }
+    };
+    
+    [_assetGroup enumerateAssetsUsingBlock:resultsBlock];
 }
 
 #pragma mark - ELCThumbnailsTableViewCellDelegate implementation
@@ -72,7 +108,8 @@ static const NSInteger MAX_THUMBNAILS_PER_ROW = 4;
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-    return ceil([self.assetGroup numberOfAssets] / (float) MAX_THUMBNAILS_PER_ROW);
+    //return ceil([self.assetGroup numberOfAssets] / (float) MAX_THUMBNAILS_PER_ROW);
+    return ceil([_assetArray count] / (float) MAX_THUMBNAILS_PER_ROW);
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
@@ -93,18 +130,20 @@ static const NSInteger MAX_THUMBNAILS_PER_ROW = 4;
 
 - (NSArray*)assetsForIndexPath:(NSIndexPath*)indexPath
 {
-    ALAssetsGroup *group  = [self assetGroup];
+    //ALAssetsGroup *group  = [self assetGroup];
     NSInteger startIndex = [indexPath row] * MAX_THUMBNAILS_PER_ROW;
-    NSInteger endIndex = startIndex + MIN([group numberOfAssets] - startIndex, MAX_THUMBNAILS_PER_ROW);
+    NSInteger endIndex = startIndex + MIN([_assetArray count] - startIndex, MAX_THUMBNAILS_PER_ROW);
     NSIndexSet *indexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(startIndex, endIndex - startIndex)];
-
-    NSMutableArray *assets = [NSMutableArray arrayWithCapacity:[indexes count]];
+    //NSMutableArray *assets = [NSMutableArray arrayWithCapacity:[indexes count]];
+    
+    /*
     [group enumerateAssetsAtIndexes:indexes options:0 usingBlock:^(ALAsset *asset, NSUInteger index, BOOL *stop) {
         if (index != NSNotFound)
             [assets addObject:asset];
     }];
-
-    return [NSArray arrayWithArray:assets];
+     */
+    
+    return [_assetArray objectsAtIndexes:indexes];
 }
 
 - (NSIndexSet *)indexesOfSelectedAssets:(NSArray *)assets

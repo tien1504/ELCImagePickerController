@@ -21,6 +21,7 @@
 #pragma mark - UI actions
 
 - (void)doneButtonTapped:(UIBarButtonItem *)sender;
+- (void)loadAssets;
 
 @end
 

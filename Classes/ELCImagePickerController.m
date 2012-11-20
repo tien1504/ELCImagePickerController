@@ -71,8 +71,8 @@
     [selectedAssets enumerateObjectsUsingBlock:^(ALAsset *asset, NSUInteger idx, BOOL *stop) {
         [assetInfo addObject:[asset mediaInfo]];
     }];
-
-    [[self delegate] elcImagePickerController:self didFinishPickingMediaWithInfo:[NSArray arrayWithArray:assetInfo]];
+    
+    [[self delegate] elcImagePickerController:self didFinishPickingMediaWithInfo:assetInfo];
 }
 
 #pragma mark - Asset helpers
