@@ -63,13 +63,26 @@
 
 - (IBAction)buttonWasTapped:(id)sender
 {
-    id<ELCAssetViewDelegate> delegate = [self delegate];
-    BOOL canToggle = [delegate assetViewCanToggleSelection:self];
+    UIButton *button = (UIButton *)sender;
+    BOOL canToggle = [self.delegate assetViewCanToggleSelection:self];
     if (canToggle) {
         [self setSelected:![self isSelected]];
-        [delegate assetViewDidToggleSelection:self];
+        [self.delegate assetViewDidToggleSelection:self];
     }
+    button.alpha = 1.0f;
 }
+
+//This set of code is used to simulate highlight event.
+- (IBAction)buttonTouchDown:(id)sender {
+    UIButton *button = (UIButton *)sender;
+    button.alpha = 0.5f;
+}
+
+- (IBAction)buttonTouchUpOutside:(id)sender {
+    UIButton *button = (UIButton *)sender;
+    button.alpha = 1.0f;
+}
+
 
 #pragma mark - Accessors
 

@@ -8,9 +8,7 @@
 
 #import <UIKit/UIKit.h>
 
-
 @protocol ELCAssetViewDelegate;
-
 
 @interface ELCAssetView : UIView
 
