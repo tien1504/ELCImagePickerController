@@ -9,12 +9,6 @@
 #import "ELCImagePickerController.h"
 #import "ELCAssetTablePicker.h"
 
-
-@interface ALAsset (ELCHelpers)
-- (NSDictionary *)mediaInfo;
-@end
-
-
 @interface ELCImagePickerController ()
 @property (nonatomic, strong) NSMutableArray *mutableSelectedAssets;
 @end
@@ -26,12 +20,12 @@
 
 - (NSString *)albumPickerControllerTitleForLoadingAlbums:(ELCAlbumPickerController *)controller
 {
-    return @"Loading...";
+    return [NSString stringWithFormat:@"%@...", [L(@"global.loading") uppercaseString]];
 }
 
 - (NSString *)albumPickerControllerTitleForSelectingAlbums:(ELCAlbumPickerController *)controller
 {
-    return @"Select an Album";
+    return [L(@"global.select-album") uppercaseString];
 }
 
 - (BOOL)albumPickerController:(ELCAlbumPickerController *)controller canSelectAsset:(ALAsset *)asset
@@ -66,13 +60,7 @@
 
 - (void)albumPickerControllerIsDone:(ELCAlbumPickerController *)controller
 {
-    NSArray *selectedAssets = [self selectedAssets];
-    NSMutableArray *assetInfo = [NSMutableArray arrayWithCapacity:[selectedAssets count]];
-    [selectedAssets enumerateObjectsUsingBlock:^(ALAsset *asset, NSUInteger idx, BOOL *stop) {
-        [assetInfo addObject:[asset mediaInfo]];
-    }];
-    
-    [[self delegate] elcImagePickerController:self didFinishPickingMediaWithInfo:assetInfo];
+    [[self delegate] elcImagePickerController:self didFinishPickingMediaWithInfo:[self selectedAssets]];
 }
 
 #pragma mark - Asset helpers
@@ -103,21 +91,6 @@
         _mutableSelectedAssets = [[NSMutableArray alloc] init];
 
     return _mutableSelectedAssets;
-}
-
-@end
-
-
-@implementation ALAsset (ELCHelpers)
-
-- (NSDictionary *)mediaInfo
-{
-    NSMutableDictionary *workingDictionary = [NSMutableDictionary dictionary];
-    [workingDictionary setObject:[self valueForProperty:ALAssetPropertyType] forKey:UIImagePickerControllerMediaType];
-    [workingDictionary setObject:[UIImage imageWithCGImage:[[self defaultRepresentation] fullScreenImage]] forKey:UIImagePickerControllerOriginalImage];
-    [workingDictionary setObject:[[self valueForProperty:ALAssetPropertyURLs] valueForKey:[[[self valueForProperty:ALAssetPropertyURLs] allKeys] objectAtIndex:0]] forKey:UIImagePickerControllerReferenceURL];
-
-    return [NSDictionary dictionaryWithDictionary:workingDictionary];
 }
 
 @end

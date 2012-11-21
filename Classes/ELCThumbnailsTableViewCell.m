@@ -82,12 +82,15 @@
                 NSNumber *duration = [asset valueForProperty:ALAssetPropertyDuration];
                 durationString = [NSString stringForDuration:[duration floatValue]];
             }
+            [assetView setBackgroundColor:[UIColor whiteColor]];
+        } else {
+            [assetView setBackgroundColor:[UIColor clearColor]];
         }
 
         [[assetView button] setImage:thumbnail forState:UIControlStateNormal];
         [assetView setVideo:isVideo];
         [[assetView videoDurationLabel] setText:durationString];
-        [[assetView button] setEnabled:!!thumbnail];
+        [[assetView button] setEnabled:(thumbnail != nil)];
     }];
 }
 
