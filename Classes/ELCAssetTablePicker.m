@@ -50,17 +50,7 @@ static const NSInteger MAX_THUMBNAILS_PER_ROW = 4;
     UINib *nib = [UINib nibWithNibName:NSStringFromClass([ELCThumbnailsTableViewCell class]) bundle:nil];
     [[self tableView] registerNib:nib forCellReuseIdentifier:[ELCThumbnailsTableViewCell reuseIdentifier]];
     
-    /*
-     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0), dispatch_get_main_queue(), ^{
-     NSInteger rowCount = [self tableView:[self tableView] numberOfRowsInSection:0];
-     if (rowCount) {
-     NSIndexPath *path = [NSIndexPath indexPathForRow:rowCount - 1 inSection:0];
-     [[self tableView] scrollToRowAtIndexPath:path atScrollPosition:UITableViewScrollPositionBottom animated:NO];
-     }
-     });
-     */
-
-    [self performSelectorInBackground:@selector(loadAssets) withObject:nil];
+    [self loadAssets];
 }
 
 - (void)loadAssets {
@@ -68,19 +58,33 @@ static const NSInteger MAX_THUMBNAILS_PER_ROW = 4;
         return;
     }
     
-    _assetArray = [NSMutableArray array];
+    //Set to high priority since it's the only thing we are on the page and waiting.
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
         
-    ALAssetsGroupEnumerationResultsBlock resultsBlock = ^(ALAsset *asset, NSUInteger index, BOOL *stop) {
+        NSMutableArray *ALAssetArray = [NSMutableArray array];
+        ALAssetsGroupEnumerationResultsBlock resultsBlock = ^(ALAsset *asset, NSUInteger index, BOOL *stop) {
+            
+            if (asset != nil) {
+                [ALAssetArray addObject:asset];
+            } else {
+                //Set array data and reload tableview in main queue.
+                dispatch_sync(dispatch_get_main_queue(), ^{
+                    _assetArray = ALAssetArray;
+                    [self.tableView reloadData];
+                    [self setTitle:[[self delegate] assetTablePickerTitleForSelectingMedia:self]];
+                    
+                    //Scroll to last row - in main queue also.
+                    NSInteger rowCount = [self tableView:[self tableView] numberOfRowsInSection:0];
+                    if (rowCount) {
+                        NSIndexPath *path = [NSIndexPath indexPathForRow:rowCount - 1 inSection:0];
+                        [[self tableView] scrollToRowAtIndexPath:path atScrollPosition:UITableViewScrollPositionBottom animated:NO];
+                    }
+                });
+            }
+        };
         
-        if (asset != nil) {
-            [_assetArray addObject:asset];
-        } else {
-            [self.tableView reloadData];
-            [self setTitle:[[self delegate] assetTablePickerTitleForSelectingMedia:self]];
-        }
-    };
-    
-    [_assetGroup enumerateAssetsUsingBlock:resultsBlock];
+        [_assetGroup enumerateAssetsUsingBlock:resultsBlock];
+    });
 }
 
 #pragma mark - ELCThumbnailsTableViewCellDelegate implementation
