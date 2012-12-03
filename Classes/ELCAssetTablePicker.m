@@ -44,7 +44,7 @@ static const NSInteger MAX_THUMBNAILS_PER_ROW = 4;
                                                                                     action:@selector(doneButtonTapped:)];
 	[self.navigationItem setRightBarButtonItem:doneButtonItem];
     
-    [self setTitle:[[self delegate] assetTablePickerTitleForLoadingMedia:self]];
+    [self setTitle:[[self delegate] assetTablePickerTitleForSelectingMedia:self]];
 
     [[self tableView] setRowHeight:[ELCThumbnailsTableViewCell cellHeight]];
     UINib *nib = [UINib nibWithNibName:NSStringFromClass([ELCThumbnailsTableViewCell class]) bundle:nil];
