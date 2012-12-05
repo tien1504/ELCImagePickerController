@@ -24,6 +24,11 @@
 
 - (void)cancelButtonTapped:(UIBarButtonItem *)sender;
 
+#pragma mark - Protected interface
+
+- (void)displayActivityViewAnimated:(BOOL)animated;
+- (void)hideActivityViewAnimated:(BOOL)animated;
+
 @end
 
 

@@ -23,6 +23,12 @@
 - (void)doneButtonTapped:(UIBarButtonItem *)sender;
 - (void)loadAssets;
 
+#pragma mark - Protected interface
+
+- (void)displayActivityViewAnimated:(BOOL)animated;
+- (void)hideActivityViewAnimated:(BOOL)animated;
+- (BOOL)isDisplayingActivityView;
+
 @end
 
 
