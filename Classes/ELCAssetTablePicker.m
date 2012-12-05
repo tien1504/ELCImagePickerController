@@ -11,11 +11,12 @@
 
 static const NSInteger MAX_THUMBNAILS_PER_ROW = 4;
 
+
 @interface ELCAssetTablePicker ()
-
-@property (nonatomic, strong) NSMutableArray *assetArray;
-
+@property (nonatomic, strong) NSArray *assets;
+@property (nonatomic, strong) UIActivityIndicatorView *activityIndicator;
 @end
+
 
 @implementation ELCAssetTablePicker
 
@@ -27,10 +28,6 @@ static const NSInteger MAX_THUMBNAILS_PER_ROW = 4;
 }
 
 #pragma mark - UITableViewController implementation
-
-- (void)viewWillAppear:(BOOL)animated {
-    [super viewWillAppear:animated];
-}
 
 -(void)viewDidLoad
 {
@@ -53,27 +50,24 @@ static const NSInteger MAX_THUMBNAILS_PER_ROW = 4;
     [self loadAssets];
 }
 
-- (void)loadAssets {
-    if ([_assetArray count] > 0) {
-        return;
-    }
-    
-    //Set to high priority since it's the only thing we are on the page and waiting.
+- (void)loadAssets
+{
+    [self displayActivityViewAnimated:NO];
+
+    // Set to high priority since it's the only thing we are on the page and waiting.
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-        
-        NSMutableArray *ALAssetArray = [NSMutableArray array];
-        ALAssetsGroupEnumerationResultsBlock resultsBlock = ^(ALAsset *asset, NSUInteger index, BOOL *stop) {
-            
-            if (asset != nil) {
-                [ALAssetArray addObject:asset];
-            } else {
-                //Set array data and reload tableview in main queue.
+        NSMutableArray *assets = [NSMutableArray arrayWithCapacity:[[self assetGroup] numberOfAssets]];
+        [[self assetGroup] enumerateAssetsUsingBlock:^(ALAsset *asset, NSUInteger index, BOOL *stop) {
+            if (asset)
+                [assets addObject:asset];
+            else {
                 dispatch_sync(dispatch_get_main_queue(), ^{
-                    _assetArray = ALAssetArray;
+                    [self hideActivityViewAnimated:NO];
+
+                    [self setAssets:assets];
                     [self.tableView reloadData];
                     [self setTitle:[[self delegate] assetTablePickerTitleForSelectingMedia:self]];
-                    
-                    //Scroll to last row - in main queue also.
+
                     NSInteger rowCount = [self tableView:[self tableView] numberOfRowsInSection:0];
                     if (rowCount) {
                         NSIndexPath *path = [NSIndexPath indexPathForRow:rowCount - 1 inSection:0];
@@ -81,9 +75,7 @@ static const NSInteger MAX_THUMBNAILS_PER_ROW = 4;
                     }
                 });
             }
-        };
-        
-        [_assetGroup enumerateAssetsUsingBlock:resultsBlock];
+        }];
     });
 }
 
@@ -109,8 +101,7 @@ static const NSInteger MAX_THUMBNAILS_PER_ROW = 4;
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-    //return ceil([self.assetGroup numberOfAssets] / (float) MAX_THUMBNAILS_PER_ROW);
-    return ceil([_assetArray count] / (float) MAX_THUMBNAILS_PER_ROW);
+    return ceil([[self assets] count] / (float) MAX_THUMBNAILS_PER_ROW);
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
@@ -131,20 +122,11 @@ static const NSInteger MAX_THUMBNAILS_PER_ROW = 4;
 
 - (NSArray*)assetsForIndexPath:(NSIndexPath*)indexPath
 {
-    //ALAssetsGroup *group  = [self assetGroup];
     NSInteger startIndex = [indexPath row] * MAX_THUMBNAILS_PER_ROW;
-    NSInteger endIndex = startIndex + MIN([_assetArray count] - startIndex, MAX_THUMBNAILS_PER_ROW);
+    NSInteger endIndex = startIndex + MIN([[self assets] count] - startIndex, MAX_THUMBNAILS_PER_ROW);
     NSIndexSet *indexes = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(startIndex, endIndex - startIndex)];
-    //NSMutableArray *assets = [NSMutableArray arrayWithCapacity:[indexes count]];
-    
-    /*
-    [group enumerateAssetsAtIndexes:indexes options:0 usingBlock:^(ALAsset *asset, NSUInteger index, BOOL *stop) {
-        if (index != NSNotFound)
-            [assets addObject:asset];
-    }];
-     */
-    
-    return [_assetArray objectsAtIndexes:indexes];
+
+    return [[self assets] objectsAtIndexes:indexes];
 }
 
 - (NSIndexSet *)indexesOfSelectedAssets:(NSArray *)assets
@@ -157,6 +139,58 @@ static const NSInteger MAX_THUMBNAILS_PER_ROW = 4;
 - (BOOL)isAssetSelected:(ALAsset *)asset
 {
     return [[self delegate] assetTablePicker:self isAssetSelected:asset];
+}
+
+#pragma mark - Activity view management
+
+- (void)displayActivityViewAnimated:(BOOL)animated
+{
+    NSTimeInterval duration = animated ? 0.2 : 0;
+    UIActivityIndicatorView *activityIndicator = [self activityIndicator];
+    CGRect viewFrame = [[self view] frame];
+    CGRect activityIndicatorFrame = [activityIndicator frame];
+    CGRect statusBarFrame = [[UIApplication sharedApplication] statusBarFrame];
+    CGRect screenBounds = [[UIScreen mainScreen] bounds];
+    CGRect navBarFrame = [[[self navigationController] navigationBar] frame];
+    viewFrame.size.height = screenBounds.size.height - statusBarFrame.size.height - navBarFrame.size.height;
+    activityIndicatorFrame.origin.x = round((viewFrame.size.width - activityIndicatorFrame.size.width) / 2);
+    activityIndicatorFrame.origin.y = round((viewFrame.size.height - activityIndicatorFrame.size.height) / 2);
+    [activityIndicator setAutoresizingMask:UIViewAutoresizingFlexibleBottomMargin];
+    [activityIndicator setFrame:activityIndicatorFrame];
+    [activityIndicator setAlpha:0];
+    [activityIndicator startAnimating];
+    [[self tableView] addSubview:activityIndicator];
+    [[self tableView] setScrollEnabled:NO];
+    [UIView animateWithDuration:duration animations:^{ [activityIndicator setAlpha:1]; }];
+}
+
+- (void)hideActivityViewAnimated:(BOOL)animated
+{
+    NSTimeInterval duration = animated ? 0.2 : 0;
+    [UIView animateWithDuration:duration
+                     animations:^{
+                         [[self activityIndicator] setAlpha:0];
+                     }
+                     completion:^(BOOL finished) {
+                         [[self activityIndicator] removeFromSuperview];
+                         [self setActivityIndicator:nil];
+                         [[self tableView] setScrollEnabled:YES];
+                     }];
+}
+
+- (BOOL)isDisplayingActivityView
+{
+    return !!_activityIndicator;
+}
+
+- (UIActivityIndicatorView *)activityIndicator
+{
+    if (!_activityIndicator) {
+        _activityIndicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
+        [_activityIndicator setHidesWhenStopped:YES];
+    }
+
+    return _activityIndicator;
 }
 
 @end

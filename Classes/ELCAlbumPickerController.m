@@ -12,6 +12,7 @@
 
 @interface ELCAlbumPickerController ()
 @property (nonatomic, strong) NSArray *assetGroups;
+@property (nonatomic, strong) UIActivityIndicatorView *activityIndicator;
 @end
 
 
@@ -141,6 +142,8 @@
 
 - (void)loadAssetGroups
 {
+    [self displayActivityViewAnimated:NO];
+    __block BOOL isShowingActivityView = YES;
 	[self setTitle:[[self delegate] albumPickerControllerTitleForLoadingAlbums:self]];
 
     NSMutableArray *assetGroups = [NSMutableArray array];
@@ -160,7 +163,12 @@
 
                 [self setAssetGroups:assetGroups];
                 NSIndexSet *sections = [NSIndexSet indexSetWithIndex:0];
-                [[self tableView] insertSections:sections  withRowAnimation:UITableViewRowAnimationBottom];
+                [[self tableView] insertSections:sections  withRowAnimation:UITableViewRowAnimationFade];
+
+                if (isShowingActivityView) {
+                    [self hideActivityViewAnimated:NO];
+                    isShowingActivityView = NO;
+                }
             }
         }];
     }];
@@ -187,6 +195,48 @@
                              [alert show];
                              NSLog(@"A problem occured %@", error);
                          }];
+}
+
+#pragma mark - Activity view management
+
+- (void)displayActivityViewAnimated:(BOOL)animated
+{
+    NSTimeInterval duration = animated ? 0.2 : 0;
+    UIActivityIndicatorView *activityIndicator = [self activityIndicator];
+    CGRect viewFrame = [[self view] frame];
+    CGRect activityIndicatorFrame = [activityIndicator frame];
+    activityIndicatorFrame.origin.x = round((viewFrame.size.width - activityIndicatorFrame.size.width) / 2);
+    activityIndicatorFrame.origin.y = round((viewFrame.size.height - activityIndicatorFrame.size.height) / 2);
+    [activityIndicator setFrame:activityIndicatorFrame];
+    [activityIndicator setAlpha:0];
+    [activityIndicator startAnimating];
+    [[self tableView] addSubview:activityIndicator];
+    [[self tableView] setScrollEnabled:NO];
+    [UIView animateWithDuration:duration animations:^{ [activityIndicator setAlpha:1]; }];
+}
+
+- (void)hideActivityViewAnimated:(BOOL)animated
+{
+    NSTimeInterval duration = animated ? 0.2 : 0;
+    [UIView animateWithDuration:duration
+                     animations:^{
+                         [[self activityIndicator] setAlpha:0];
+                     }
+                     completion:^(BOOL finished) {
+                         [[self activityIndicator] removeFromSuperview];
+                         [self setActivityIndicator:nil];
+                         [[self tableView] setScrollEnabled:YES];
+                     }];
+}
+
+- (UIActivityIndicatorView *)activityIndicator
+{
+    if (!_activityIndicator) {
+        _activityIndicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
+        [_activityIndicator setHidesWhenStopped:YES];
+    }
+
+    return _activityIndicator;
 }
 
 @end
