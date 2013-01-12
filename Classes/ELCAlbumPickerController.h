@@ -43,6 +43,7 @@
 - (void)albumPickerController:(ELCAlbumPickerController *)controller didDeselectAsset:(ALAsset *)asset;
 
 - (BOOL)albumPickerController:(ELCAlbumPickerController *)controller isAssetSelected:(ALAsset *)asset;
+- (BOOL)albumPickerController:(ELCAlbumPickerController *)pickerController isAssetPreSelected:(ALAsset *)asset;
 
 - (void)albumPickerControllerDidCancel:(ELCAlbumPickerController *)controller;
 - (void)albumPickerControllerIsDone:(ELCAlbumPickerController *)controller;

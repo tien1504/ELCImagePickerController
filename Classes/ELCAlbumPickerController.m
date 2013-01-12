@@ -137,6 +137,10 @@
     [[self delegate] albumPickerControllerIsDone:self];
 }
 
+- (BOOL)assetTablePicker:(ELCAssetTablePicker *)pickerController isAssetPreSelected:(ALAsset *)asset {
+    return [self.delegate albumPickerController:self isAssetPreSelected:asset];
+}
+
 #pragma mark -
 #pragma mark - Asset group management
 

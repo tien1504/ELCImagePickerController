@@ -20,6 +20,7 @@
 @property (nonatomic, copy) NSArray *assets;
 @property (nonatomic, copy) NSIndexSet *selectedAssetIndexes;
 @property (nonatomic, strong) UIImage *selectedAssetOverlayImage;
+@property (nonatomic, copy) NSIndexSet *preSelectedAssetIndexes;
 
 #pragma mark - Static properties
 

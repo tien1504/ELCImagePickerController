@@ -16,6 +16,13 @@
 
 @implementation ELCImagePickerController
 
+-(id)initWithNavigationBarClass:(Class)navigationBarClass toolbarClass:(Class)toolbarClass {
+    if (self = [super initWithNavigationBarClass:navigationBarClass toolbarClass:toolbarClass]) {
+        _mutableSelectedAssets = [NSMutableArray array];
+    }
+    return self;
+}
+
 #pragma mark - ELCAlbumPickerControllerDelegate implementation
 
 - (NSString *)albumPickerControllerTitleForLoadingAlbums:(ELCAlbumPickerController *)controller
@@ -45,12 +52,9 @@
 
 - (void)albumPickerController:(ELCAlbumPickerController *)controller didDeselectAsset:(ALAsset *)asset
 {
-    [[self mutableSelectedAssets] removeObjectAtIndex:[self indexOfAsset:asset]];
-}
-
-- (BOOL)albumPickerController:(ELCAlbumPickerController *)controller isAssetSelected:(ALAsset *)asset
-{
-    return [self indexOfAsset:asset] != NSNotFound;
+    if ([[self mutableSelectedAssets] containsObject:asset]) {
+        [[self mutableSelectedAssets] removeObject:asset];
+    }
 }
 
 - (void)albumPickerControllerDidCancel:(ELCAlbumPickerController *)controller
@@ -63,15 +67,28 @@
     [[self delegate] elcImagePickerController:self didFinishPickingMediaWithInfo:[self selectedAssets]];
 }
 
+- (BOOL)albumPickerController:(ELCAlbumPickerController *)controller isAssetSelected:(ALAsset *)asset
+{
+    return [self indexOfAsset:asset inAssetArray:[self mutableSelectedAssets]] != NSNotFound;
+}
+
+- (BOOL)albumPickerController:(ELCAlbumPickerController *)controller isAssetPreSelected:(ALAsset *)asset {
+    return [self indexOfAsset:asset inAssetArray:_preSelectedAsset] != NSNotFound;
+}
+
 #pragma mark - Asset helpers
 
-- (NSInteger)indexOfAsset:(ALAsset *)asset
+- (NSInteger)indexOfAsset:(ALAsset *)asset inAssetArray:(NSArray *)assetArray
 {
+    //Skip checks if the asset array is empty.
+    if (assetArray == nil) {
+        return NSNotFound;
+    }
+    
     BOOL isURLPropertyAvailable = &ALAssetPropertyAssetURL != NULL;  // only available on iOS 6 and later
     NSURL *assetURL = isURLPropertyAvailable ? [asset valueForProperty:ALAssetPropertyAssetURL] : [[asset defaultRepresentation] url];
-    NSArray *selectedAssets = [self mutableSelectedAssets];
 
-    return [selectedAssets indexOfObjectPassingTest:^(ALAsset *candidate, NSUInteger idx, BOOL *stop) {
+    return [assetArray indexOfObjectPassingTest:^(ALAsset *candidate, NSUInteger idx, BOOL *stop) {
         NSURL *candidateURL =
             isURLPropertyAvailable ? [candidate valueForProperty:ALAssetPropertyAssetURL] : [[candidate defaultRepresentation] url];
         return [candidateURL isEqual:assetURL];
@@ -83,14 +100,6 @@
 - (NSArray *)selectedAssets
 {
     return [NSArray arrayWithArray:[self mutableSelectedAssets]];
-}
-
-- (NSMutableArray *)mutableSelectedAssets
-{
-    if (!_mutableSelectedAssets)
-        _mutableSelectedAssets = [[NSMutableArray alloc] init];
-
-    return _mutableSelectedAssets;
 }
 
 @end

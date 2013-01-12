@@ -114,6 +114,7 @@ static const NSInteger MAX_THUMBNAILS_PER_ROW = 4;
     NSArray *assets = [self assetsForIndexPath:indexPath];
     [cell setAssets:assets];
     [cell setSelectedAssetIndexes:[self indexesOfSelectedAssets:assets]];
+    [cell setPreSelectedAssetIndexes:[self indexesOfPreSelectedAssets:assets]];
 
     return cell;
 }
@@ -129,6 +130,7 @@ static const NSInteger MAX_THUMBNAILS_PER_ROW = 4;
     return [[self assets] objectsAtIndexes:indexes];
 }
 
+
 - (NSIndexSet *)indexesOfSelectedAssets:(NSArray *)assets
 {
     return [assets indexesOfObjectsPassingTest:^BOOL(ALAsset *asset, NSUInteger idx, BOOL *stop) {
@@ -140,6 +142,19 @@ static const NSInteger MAX_THUMBNAILS_PER_ROW = 4;
 {
     return [[self delegate] assetTablePicker:self isAssetSelected:asset];
 }
+
+- (NSIndexSet *)indexesOfPreSelectedAssets:(NSArray *)assets
+{
+    return [assets indexesOfObjectsPassingTest:^BOOL(ALAsset *asset, NSUInteger idx, BOOL *stop) {
+        return [self isAssetPreSelected:asset];
+    }];
+}
+
+- (BOOL)isAssetPreSelected:(ALAsset *)asset
+{
+    return [[self delegate] assetTablePicker:self isAssetPreSelected:asset];
+}
+
 
 #pragma mark - Activity view management
 

@@ -104,6 +104,8 @@
 
 #pragma mark - Accessors
 
+//Selected Assets related:
+
 - (void)setAssets:(NSArray *)assets
 {
     _assets = [assets copy];
@@ -120,6 +122,21 @@
 {
     _selectedAssetOverlayImage = selectedAssetOverlayImage;
     [[self assetViews] makeObjectsPerformSelector:@selector(setSelectedOverlayImage:) withObject:_selectedAssetOverlayImage];
+}
+
+//Pre-selected Assets related:
+
+- (void)setPreSelectedAssetIndexes:(NSIndexSet *)preSelectedAssetIndexes
+{
+    _preSelectedAssetIndexes = [preSelectedAssetIndexes copy];
+    [self indicatePreSelectedAssetAtIndexes:_preSelectedAssetIndexes];
+}
+
+- (void)indicatePreSelectedAssetAtIndexes:(NSIndexSet *)indexes
+{
+    [[self assetViews] enumerateObjectsUsingBlock:^(ELCAssetView *assetView, NSUInteger idx, BOOL *stop) {
+        [assetView setPreSelected:[indexes containsIndex:idx]];
+    }];
 }
 
 #pragma mark - Static properties

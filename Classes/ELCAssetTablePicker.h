@@ -45,6 +45,7 @@
 - (void)assetTablePicker:(ELCAssetTablePicker *)pickerController didDeselectAsset:(ALAsset *)asset;
 
 - (BOOL)assetTablePicker:(ELCAssetTablePicker *)pickerController isAssetSelected:(ALAsset *)asset;
+- (BOOL)assetTablePicker:(ELCAssetTablePicker *)pickerController isAssetPreSelected:(ALAsset *)asset;
 
 - (void)assetTablePickerIsDone:(ELCAssetTablePicker *)pickerController;
 

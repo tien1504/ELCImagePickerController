@@ -23,12 +23,14 @@
 {
     [super awakeFromNib];
     [[self videoDurationOverlayView] applyRegularFont];
+    [self configureViewForPreSelected];
     [self configureViewForSelectionState:[self isSelected]];
 }
 
 - (void)layoutSubviews
 {
     [super layoutSubviews];
+    [self configureViewForPreSelected];
     if ([self isSelected])
         [self configureSelectedOverlayView];
 }
@@ -57,6 +59,17 @@
         overlayFrame = bounds;
 
     [overlayView setFrame:overlayFrame];
+}
+
+- (void)configureViewForPreSelected {
+    
+    if (_preSelected) {
+        self.button.alpha = 0.5f;
+        self.userInteractionEnabled = NO;
+    } else {
+        self.button.alpha = 1.0f;
+        self.userInteractionEnabled = YES;
+    }
 }
 
 #pragma mark - UI events
@@ -100,6 +113,12 @@
         _selected = selected;
         [self configureViewForSelectionState:_selected];
     }
+}
+
+- (void)setPreSelected:(BOOL)preSelected {
+    _preSelected = preSelected;
+    //Might not be necessary;
+    [self configureViewForPreSelected];
 }
 
 - (void)setSelectedOverlayImage:(UIImage *)selectedOverlayImage

@@ -18,6 +18,7 @@
 @property (nonatomic, strong, readonly) IBOutlet UILabel *videoDurationLabel;
 @property (nonatomic, assign, getter=isVideo) BOOL video;
 @property (nonatomic, assign, getter=isSelected) BOOL selected;
+@property (nonatomic, assign) BOOL preSelected;
 
 @property (nonatomic, strong) UIImage *selectedOverlayImage;
 
