@@ -14,8 +14,8 @@
 
 @property (nonatomic, weak) id<ELCAssetViewDelegate> delegate;
 
-@property (nonatomic, strong, readonly) IBOutlet UIButton *button;
-@property (nonatomic, strong, readonly) IBOutlet UILabel *videoDurationLabel;
+@property (nonatomic, strong) IBOutlet UIButton *button;
+@property (nonatomic, strong) IBOutlet UILabel *videoDurationLabel;
 @property (nonatomic, assign, getter=isVideo) BOOL video;
 @property (nonatomic, assign, getter=isSelected) BOOL selected;
 
