@@ -12,7 +12,7 @@
 @protocol ELCImagePickerControllerDelegate;
 @class ELCAsset;
 
-@interface ELCImagePickerController : UINavigationController <ELCAlbumPickerControllerDelegate>
+@interface ELCImagePickerController : UIViewController <ELCAlbumPickerControllerDelegate>
 
 @property (nonatomic, weak) id<UINavigationControllerDelegate, ELCImagePickerControllerDelegate> delegate;
 @property (nonatomic, assign) NSArray *preSelectedAsset;

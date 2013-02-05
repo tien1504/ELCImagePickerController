@@ -10,8 +10,8 @@
 #import "UIView+QWFonts.h"
 
 @interface ELCAssetView ()
-@property (nonatomic, strong, readonly) IBOutlet UIView *videoDurationOverlayView;
-@property (nonatomic, strong, readonly) IBOutlet UIImageView *selectedOverlayImageView;
+@property (nonatomic, strong) IBOutlet UIView *videoDurationOverlayView;
+@property (nonatomic, strong) IBOutlet UIImageView *selectedOverlayImageView;
 @end
 
 
