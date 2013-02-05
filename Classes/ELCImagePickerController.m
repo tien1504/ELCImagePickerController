@@ -16,13 +16,6 @@
 
 @implementation ELCImagePickerController
 
--(id)initWithNavigationBarClass:(Class)navigationBarClass toolbarClass:(Class)toolbarClass {
-    if (self = [super initWithNavigationBarClass:navigationBarClass toolbarClass:toolbarClass]) {
-        _mutableSelectedAssets = [NSMutableArray array];
-    }
-    return self;
-}
-
 #pragma mark - ELCAlbumPickerControllerDelegate implementation
 
 - (NSString *)albumPickerControllerTitleForLoadingAlbums:(ELCAlbumPickerController *)controller
@@ -101,5 +94,14 @@
 {
     return [NSArray arrayWithArray:[self mutableSelectedAssets]];
 }
+
+- (NSMutableArray *)mutableSelectedAssets
+{
+    if (!_mutableSelectedAssets)
+        _mutableSelectedAssets = [[NSMutableArray alloc] init];
+    
+    return _mutableSelectedAssets;
+}
+
 
 @end
