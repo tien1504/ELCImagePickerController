@@ -12,6 +12,7 @@
 @interface ELCAssetView ()
 @property (nonatomic, strong) IBOutlet UIView *videoDurationOverlayView;
 @property (nonatomic, strong) IBOutlet UIImageView *selectedOverlayImageView;
+@property (nonatomic, strong) IBOutlet UIImageView *preSelectedOverlayImageView;
 @end
 
 
@@ -40,9 +41,9 @@
 - (void)configureViewForSelectionState:(BOOL)isSelected
 {
     if (isSelected)
-        [self addSubview:[self selectedOverlayImageView]];
+        [self addSubview:self.selectedOverlayImageView];
     else
-        [[self selectedOverlayImageView] removeFromSuperview];
+        [self.selectedOverlayImageView removeFromSuperview];
 }
 
 - (void)configureSelectedOverlayView
@@ -59,15 +60,17 @@
         overlayFrame = bounds;
 
     [overlayView setFrame:overlayFrame];
+    self.preSelectedOverlayImageView.frame = overlayFrame;
 }
 
 - (void)configureViewForPreSelected {
     
     if (_preSelected) {
-        self.button.alpha = 0.5f;
+        self.preSelectedOverlayImageView.image = [UIImage imageNamed:@"ImagePickerPreSelectedCheck"];
+        [self addSubview:self.preSelectedOverlayImageView];
         self.userInteractionEnabled = NO;
     } else {
-        self.button.alpha = 1.0f;
+        [self.preSelectedOverlayImageView removeFromSuperview];
         self.userInteractionEnabled = YES;
     }
 }
